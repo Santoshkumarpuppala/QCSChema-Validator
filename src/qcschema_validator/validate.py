@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import warnings
 from dataclasses import dataclass
-from typing import Any, Dict, Optional, Set, get_origin
+from typing import Annotated, Any, Dict, Optional, Set, get_origin
 
 import numpy as np
 from pydantic import ConfigDict, TypeAdapter, ValidationError
@@ -33,17 +33,21 @@ class CoverageResult:
         return (sum(self.allowlisted_cov.values()) / len(self.allowlisted_cov)) if self.allowlisted_cov else 1.0
 
 
-def matches(value: Any, annotation: Any) -> bool:
+def matches(value: Any, annotation: Any, metadata: Any = ()) -> bool:
+    is_array = get_origin(annotation) == np.ndarray or annotation is np.ndarray
+    if is_array and metadata:
+        # qcelemental keeps the array caster in the field metadata, not the annotation
+        annotation = Annotated[annotation, *metadata]
+    elif is_array:
+        value = np.asarray(value)
     ta = TypeAdapter(annotation, config=ConfigDict(arbitrary_types_allowed=True))
     try:
-        if get_origin(annotation) == np.ndarray or annotation is np.ndarray:
-            ta.validate_python(np.asarray(value))
-        else:
-            ta.validate_python(value)
-        return True
-
-    except ValidationError:
+        out = ta.validate_python(value)
+    except (ValidationError, ValueError, TypeError):
         return False
+    if is_array:
+        return isinstance(out, np.ndarray) and out.ndim >= 1
+    return True
 
 def _pick_schema(data: dict) -> Optional[Any]:
     schema_name = data.get("schema_name")
@@ -101,7 +105,7 @@ def validate_data_against_schemas(
                 optional_vals[field_name] = None
             continue
 
-        ok = matches(data[field_name], field.annotation)
+        ok = matches(data[field_name], field.annotation, field.metadata)
         if is_req:
             required_cov[field_name] = ok
             required_vals[field_name] = data[field_name]
