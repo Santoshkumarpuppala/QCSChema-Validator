@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import argparse
-from typing import Sequence
+from collections.abc import Sequence
 
 from .parsing import PARSERS, parse_config
-from .validate import CoverageResult, validate_data_against_schemas
+from .validate import validate_data_against_schemas
 
 RED = "\033[31m"
 GREEN = "\033[32m"

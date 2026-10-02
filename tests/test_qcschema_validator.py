@@ -1,12 +1,11 @@
-import sys
 import subprocess
-import warnings
+import sys
 from pathlib import Path
 
 import pytest
+
 from qcschema_validator.parsing import parse_config
 from qcschema_validator.validate import validate_data_against_schemas
-
 
 TEST_DIR = Path(__file__).resolve().parent
 GOOD_FILES = sorted(TEST_DIR.glob("*good*"))
@@ -15,7 +14,7 @@ BAD_FILES = sorted(TEST_DIR.glob("*bad*"))
 
 def run_cli(args: list[str]) -> subprocess.CompletedProcess[str]:
     cmd = [sys.executable, "-m", "qcschema_validator", *args]
-    return subprocess.run(cmd, capture_output=True, text=True)
+    return subprocess.run(cmd, capture_output=True, text=True, check=False)
 
 
 # ---------------------------------------------------------------------------

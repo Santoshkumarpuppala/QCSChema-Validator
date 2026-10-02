@@ -11,7 +11,6 @@ import json
 import tomllib
 from typing import Any
 
-
 # ---------------------------------------------------------------------------
 # Parsing
 # ---------------------------------------------------------------------------
@@ -71,7 +70,7 @@ def get_schema_name(text: str, ext: str) -> str | None:
     """Parse ``text`` and return the value of its schema_name field, or None."""
     try:
         data = _parse(text, ext)
-    except Exception:
+    except Exception:  # noqa: BLE001 - any parser error means "no schema_name"
         return None
     if not isinstance(data, dict):
         return None
@@ -92,7 +91,7 @@ def run(text: str, ext: str, schema_json_str: str) -> dict:
     # Parse file
     try:
         data = _parse(text, ext)
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001 - report any parser error to the user
         return _error(f"Could not parse file as {ext.upper()}: {exc}")
 
     if not isinstance(data, dict):

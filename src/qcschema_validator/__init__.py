@@ -1,13 +1,12 @@
 # qcschema_validator/__init__.py
-from .parsing import parse_config, PARSERS
-from .validate import validate_data_against_schemas, CoverageResult
-
+from .parsing import PARSERS, parse_config
+from .validate import CoverageResult, validate_data_against_schemas
 
 __all__ = [
-    "parse_config",
     "PARSERS",
-    "validate_data_against_schemas",
-    "CoverageResult"
+    "CoverageResult",
+    "parse_config",
+    "validate_data_against_schemas"
 ]
 
 

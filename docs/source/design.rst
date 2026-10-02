@@ -33,12 +33,11 @@ data between different software packages.
    the working version. The working version is maintained as part of
    `QCElemental <https://github.com/MolSSI/QCElemental>`__.
 
-   - The current standard lives in the
-     `next2025 <https://github.com/MolSSI/QCElemental/tree/next2025>`__
-     branch of QCElemental.
-   - There is an active
-     `PR #377 <https://github.com/MolSSI/QCElemental/pull/377>`__ to update the
-     ``next2025`` branch to the latest version of QCSchema.
+   - The current standard ships in the released versions of QCElemental on
+     `PyPI <https://pypi.org/project/qcelemental/>`__. The Project requires
+     ``qcelemental>=0.51.2``.
+   - Development of the standard continues on the ``next20XX`` branches of
+     QCElemental (e.g., ``next2026``).
 
 The schema definitions are Pydantic v2 models available at
 ``qcelemental.models.v2`` in the Python package. This is the programmatic
@@ -126,8 +125,11 @@ consistent with the QCSchema standard.
 **Notes**:
 
 - Is there a canonical Pydantic implementation of QCSchema we can use?
-  **Yes** — QCElemental's ``next2025`` branch provides a full Pydantic v2
-  implementation at ``qcelemental.models.v2``.
+  **Yes** — QCElemental provides a full Pydantic v2 implementation at
+  ``qcelemental.models.v2``.
+- With NumPy 2.5, ``qcelemental`` 0.51.2 fails to build Pydantic schemas for
+  its array fields, so ``pyproject.toml`` pins ``numpy<2.5`` until QCElemental
+  supports it.
 
 **Solution**: ``validate.py`` selects the correct Pydantic model by matching
 ``data["schema_name"]`` to the ``schema_name`` default on each model class in
@@ -263,8 +265,8 @@ with QCSchema.
    `Pyodide <https://pyodide.org>`__ (CPython compiled to WebAssembly), so no
    data leaves the user's machine and no backend server is required.
 
-   **Architecture**: ``qcelemental`` cannot run in Pyodide (C extensions, git
-   VCS dep). The workaround is a build-time step (``webapp/build_schemas.py``)
+   **Architecture**: ``qcelemental`` cannot run in Pyodide (C extensions).
+   The workaround is a build-time step (``webapp/build_schemas.py``)
    that imports ``qcelemental`` in a normal CPython environment, calls
    ``model.model_json_schema()`` on every model that has a ``schema_name``
    default, and writes the results to static JSON files under
