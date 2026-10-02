@@ -23,7 +23,8 @@ how much of the standard a given file implements.
 pip install git+https://github.com/rmrresearch/QCSChema-Validator.git
 ```
 
-**Status**: PyPI deployment is coming when QCSchema V2 is released.
+**Status**: QCSchema V2 is now in the released versions of QCElemental. Until it is published to PyPI,
+install it from GitHub as shown above.
 
 ## Usage
 

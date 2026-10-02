@@ -130,7 +130,7 @@ def main() -> None:
         try:
             json_schema = model.model_json_schema()
             source = "pydantic"
-        except Exception:
+        except Exception:  # noqa: BLE001 - any failure falls back to the stub schema
             json_schema = _fallback_schema(model, schema_name)
             source = "fallback"
 

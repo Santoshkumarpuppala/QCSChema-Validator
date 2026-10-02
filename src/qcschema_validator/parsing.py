@@ -1,13 +1,14 @@
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Any, Callable, Mapping, Union
-
 import json
-import yaml
 import tomllib
+from collections.abc import Callable, Mapping
+from pathlib import Path
+from typing import Any
 
-PathLike = Union[str, Path]
+import yaml
+
+PathLike = str | Path
 ParserFn = Callable[[Path], Any]
 
 def _open_rb(path: Path):
