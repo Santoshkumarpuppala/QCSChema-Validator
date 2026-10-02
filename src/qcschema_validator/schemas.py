@@ -2,26 +2,32 @@ from __future__ import annotations
 
 import inspect
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Set, Tuple, Type, get_args, get_origin, Union, Annotated
+from typing import (
+    Annotated,
+    Any,
+    Union,
+    get_args,
+    get_origin,
+)
 
-from pydantic import BaseModel
 import qcelemental.models.v2 as qc_models
+from pydantic import BaseModel
 
-SchemaType = Type[BaseModel]
+SchemaType = type[BaseModel]
 
-def collect_schemas(module=qc_models) -> Dict[str, SchemaType]:
+def collect_schemas(module=qc_models) -> dict[str, SchemaType]:
     """
     Collect all Pydantic models from a module.
     """
-    out: Dict[str, SchemaType] = {}
+    out: dict[str, SchemaType] = {}
     for name, obj in vars(module).items():
         if inspect.isclass(obj) and issubclass(obj, BaseModel) and obj is not BaseModel:
             out[name] = obj
     return out
 
-_schemas: Dict[str, SchemaType] | None = None
+_schemas: dict[str, SchemaType] | None = None
 
-def get_schemas() -> Dict[str, SchemaType]:
+def get_schemas() -> dict[str, SchemaType]:
     global _schemas
     if _schemas is None:
         _schemas = collect_schemas()
@@ -36,9 +42,9 @@ class FieldInfo:
 @dataclass(frozen=True)
 class ClassInfo:
     cls: SchemaType
-    required: Tuple[FieldInfo, ...]
-    optional: Tuple[FieldInfo, ...]
-    children: Tuple[ClassInfo, ...]
+    required: tuple[FieldInfo, ...]
+    optional: tuple[FieldInfo, ...]
+    children: tuple[ClassInfo, ...]
     
 
 def _is_pydantic_model_type(tp: Any) -> bool:
@@ -79,7 +85,7 @@ def iter_pydantic_model_types(annotation: Any) -> set[SchemaType]:
 def describe_model(
     cls: SchemaType,
     *,
-    seen: Optional[Set[SchemaType]] = None,
+    seen: set[SchemaType] | None = None,
 ) -> ClassInfo:
     """
     Recursively describe a BaseModel's fields and nested model types.
@@ -89,8 +95,8 @@ def describe_model(
         return ClassInfo(cls=cls, required=(), optional=(), children=())
     seen.add(cls)
 
-    required: List[FieldInfo] = []
-    optional: List[FieldInfo] = []
+    required: list[FieldInfo] = []
+    optional: list[FieldInfo] = []
     child_types: set[SchemaType] = set()
 
     for name, field in cls.model_fields.items():

@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import warnings
 from dataclasses import dataclass
-from typing import Any, Dict, Optional, Set, get_origin
+from typing import Any, get_origin
 
 import numpy as np
-from pydantic import ConfigDict, TypeAdapter, ValidationError
+from pydantic import ConfigDict, PydanticUserError, TypeAdapter, ValidationError
 
 from .schemas import get_schemas
 
@@ -13,12 +13,12 @@ from .schemas import get_schemas
 @dataclass(frozen=True)
 class CoverageResult:
     schema_name: str
-    required_cov: Dict[str, bool]
-    optional_cov: Dict[str, bool]
-    allowlisted_cov: Dict[str, bool]
-    required_vals: Dict[str, Any]
-    optional_vals: Dict[str, Any]
-    allowlisted_vals: Dict[str, Any]
+    required_cov: dict[str, bool]
+    optional_cov: dict[str, bool]
+    allowlisted_cov: dict[str, bool]
+    required_vals: dict[str, Any]
+    optional_vals: dict[str, Any]
+    allowlisted_vals: dict[str, Any]
 
     @property
     def required_score(self) -> float:
@@ -33,8 +33,18 @@ class CoverageResult:
         return (sum(self.allowlisted_cov.values()) / len(self.allowlisted_cov)) if self.allowlisted_cov else 1.0
 
 
+def _type_adapter(annotation: Any) -> TypeAdapter:
+    try:
+        return TypeAdapter(annotation, config=ConfigDict(arbitrary_types_allowed=True))
+    except PydanticUserError as e:
+        # BaseModel, dataclass and TypedDict types carry their own config
+        if e.code != "type-adapter-config-unused":
+            raise
+        return TypeAdapter(annotation)
+
+
 def matches(value: Any, annotation: Any) -> bool:
-    ta = TypeAdapter(annotation, config=ConfigDict(arbitrary_types_allowed=True))
+    ta = _type_adapter(annotation)
     try:
         if get_origin(annotation) == np.ndarray or annotation is np.ndarray:
             ta.validate_python(np.asarray(value))
@@ -45,21 +55,23 @@ def matches(value: Any, annotation: Any) -> bool:
     except ValidationError:
         return False
 
-def _pick_schema(data: dict) -> Optional[Any]:
+def _pick_schema(data: dict) -> Any | None:
     schema_name = data.get("schema_name")
     if schema_name is None:
         return None
 
     schemas = get_schemas()
-    for _name, model in schemas.items():
-        if "schema_name" in model.model_fields:
-            if model.model_fields["schema_name"].default == schema_name:
-                return model
+    for model in schemas.values():
+        if (
+            "schema_name" in model.model_fields
+            and model.model_fields["schema_name"].default == schema_name
+        ):
+            return model
 
     return None
 
 def validate_data_against_schemas(
-    data: dict, *, allowlist: Set[str] | None = None
+    data: dict, *, allowlist: set[str] | None = None
 ) -> CoverageResult:
     model = _pick_schema(data)
     if model is None:
@@ -77,12 +89,12 @@ def validate_data_against_schemas(
                 stacklevel=2,
             )
 
-    required_cov: Dict[str, bool] = {}
-    optional_cov: Dict[str, bool] = {}
-    allowlisted_cov: Dict[str, bool] = {}
-    required_vals: Dict[str, Any] = {}
-    optional_vals: Dict[str, Any] = {}
-    allowlisted_vals: Dict[str, Any] = {}
+    required_cov: dict[str, bool] = {}
+    optional_cov: dict[str, bool] = {}
+    allowlisted_cov: dict[str, bool] = {}
+    required_vals: dict[str, Any] = {}
+    optional_vals: dict[str, Any] = {}
+    allowlisted_vals: dict[str, Any] = {}
 
     for field_name, field in model.model_fields.items():
         present = field_name in data
